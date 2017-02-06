@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"html"
-	"reflect"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -172,34 +171,6 @@ type Class struct {
 	Base
 	Methods    []*Method   `json:"methods"`
 	Properties []*Property `json:"properties"`
-}
-
-type decler interface {
-	decl() string
-	comment() string
-}
-
-func declSlice(ar interface{}) string {
-	v := reflect.ValueOf(ar)
-	if v.IsNil() {
-		return ""
-	}
-	var t []decler
-	ret := reflect.MakeSlice(reflect.TypeOf(t), 0, v.Len())
-	for i := 0; i < v.Len(); i++ {
-		ret = reflect.Append(ret, v.Index(i))
-	}
-	// declers to string
-	ds := ret.Interface().([]decler)
-	ss := []string{}
-	for i := 0; i < len(ds); i++ {
-		comment := ds[i].comment()
-		if comment != "" {
-			ss = append(ss, comment)
-		}
-		ss = append(ss, ds[i].decl())
-	}
-	return strings.Join(ss, "\n\t")
 }
 
 func (c *Class) decl() string {
