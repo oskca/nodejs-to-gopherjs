@@ -177,7 +177,7 @@ func (c *Class) decl() string {
 	if len(c.Methods)+len(c.Properties) == 0 {
 		return ""
 	}
-	out := fmt.Sprintf("type %s struct {\n\t", c.gosym())
+	out := fmt.Sprintf("\ntype %s struct {\n\t", c.gosym())
 	out += "*js.Object\n\t"
 	out += declSlice(c.Properties)
 	out += "\n\t"
@@ -237,15 +237,17 @@ func (m *Module) decl() string {
 
 type ApiFile struct {
 	Source  string    `js:"source"`
-	Modules []*Module `js:"modules,omitempty"`
 	Globals []*Module `js:"globals,omitempty"`
+	Modules []*Module `js:"modules,omitempty"`
+	Classes []*Module `js:"classes,omitempty"`
 }
 
 func (a *ApiFile) decl() string {
 	out := "//" + a.Source
 	out += "\npackage nodejs\n"
 	out += "import (\n\t\"github.com/gopherjs/gopherjs/js\"\n)"
-	out += declSlice(a.Modules)
 	out += declSlice(a.Globals)
+	out += declSlice(a.Modules)
+	out += declSlice(a.Classes)
 	return out
 }

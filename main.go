@@ -40,11 +40,10 @@ func declSlice(ar interface{}) string {
 	return strings.Join(ss, "\n\t")
 }
 
-func main() {
-	fpath := flag.Arg(0)
+func process(fpath string) error {
 	r, err := os.Open(fpath)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer r.Close()
 	// parse
@@ -52,7 +51,7 @@ func main() {
 	dec := json.NewDecoder(r)
 	err = dec.Decode(&a)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	// create file
 	opath := strings.Replace(fpath, ".json", ".go", 1)
@@ -61,8 +60,15 @@ func main() {
 		log.Fatal(err)
 	}
 	_, err = io.WriteString(w, a.decl())
-	if err != nil {
-		log.Fatal(err)
+	return err
+}
+
+func main() {
+	for i := 0; i < flag.NArg(); i++ {
+		log.Println("Processing", flag.Arg(i))
+		if err := process(flag.Arg(i)); err != nil {
+			log.Println(err)
+		}
 	}
 }
 
