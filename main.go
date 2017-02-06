@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"os"
-	"fmt"
+	"strings"
 )
 
 func main() {
@@ -22,7 +23,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// spew.Dump(a)
-	println("source:")
-	fmt.Println(a.decl())
+	// create file
+	opath := strings.Replace(fpath, ".json", ".go", 1)
+	w, err := os.OpenFile(opath, os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = io.WriteString(w, a.decl())
+	if err != nil {
+		log.Fatal(err)
+	}
 }

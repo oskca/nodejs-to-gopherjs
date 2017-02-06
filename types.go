@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"html"
 	"reflect"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 type Base struct {
@@ -57,20 +60,34 @@ func (b *Base) decl() string {
 	)
 }
 
+func purify(desc string) string {
+	desc = strings.Replace(desc, "\n", "\n//", -1)
+	desc = html.UnescapeString(desc)
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(desc))
+	if err != nil {
+		println(err.Error())
+		return desc
+	}
+	return doc.Text()
+}
+
 func (b *Base) comment() string {
 	ms := []string{}
 	if b.TextRaw != "" {
 		ms = append(ms, b.TextRaw)
 	}
 	if b.ShortDesc != "" {
-		ms = append(ms, b.ShortDesc)
+		ms = append(ms, purify(b.ShortDesc))
 	}
 	if b.Desc != "" {
-		ms = append(ms, b.Desc)
+		ms = append(ms, purify(b.Desc))
 	}
-	out := "//" + strings.Title(b.Name) + "docs"
+	out := ""
 	if len(ms) > 0 {
-		out += "\n//" + strings.Join(ms, "\n//")
+		out += "\n//" + b.gosym() + " docs"
+		if len(ms) > 0 {
+			out += "\n//" + strings.Join(ms, "\n//")
+		}
 	}
 	return out
 }
@@ -131,6 +148,9 @@ func (s *Signature) decl() string {
 	}
 	return out
 }
+func (s *Signature) comment() string {
+	return ""
+}
 
 type Method struct {
 	Base
@@ -156,6 +176,7 @@ type Class struct {
 
 type decler interface {
 	decl() string
+	comment() string
 }
 
 func declSlice(ar interface{}) string {
@@ -172,6 +193,10 @@ func declSlice(ar interface{}) string {
 	ds := ret.Interface().([]decler)
 	ss := []string{}
 	for i := 0; i < len(ds); i++ {
+		comment := ds[i].comment()
+		if comment != "" {
+			ss = append(ss, comment)
+		}
 		ss = append(ss, ds[i].decl())
 	}
 	return strings.Join(ss, "\n\t")
@@ -232,6 +257,8 @@ type ApiFile struct {
 
 func (a *ApiFile) decl() string {
 	out := "//" + a.Source
+	out += "\npackage nodejs\n"
+	out += "import (\n\t\"github.com/gopherjs/gopherjs/js\"\n)"
 	out += declSlice(a.Modules)
 	out += declSlice(a.Globals)
 	return out
