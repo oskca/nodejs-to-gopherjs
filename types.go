@@ -174,6 +174,9 @@ type Class struct {
 }
 
 func (c *Class) decl() string {
+	if len(c.Methods)+len(c.Properties) == 0 {
+		return ""
+	}
 	out := fmt.Sprintf("type %s struct {\n\t", c.gosym())
 	out += "*js.Object\n\t"
 	out += declSlice(c.Properties)
@@ -194,29 +197,41 @@ type Module struct {
 }
 
 func (m *Module) decl() string {
+	childs := len(m.Events) +
+		len(m.Properties) +
+		len(m.Methods) +
+		len(m.Classes)
+	if childs == 0 {
+		if len(m.Modules) == 0 {
+			return ""
+		} else {
+			return declSlice(m.Modules)
+		}
+	}
+	// output
 	out := ""
+	// modules
+	if m.Modules != nil {
+		out += declSlice(m.Modules)
+	}
+	// classes
+	if m.Classes != nil {
+		out += declSlice(m.Classes)
+		out += "\n\t"
+	}
 	// events
 	if m.Events != nil {
 		out += "\nconst (\n\t"
 		out += declSlice(m.Events)
 		out += "\n)\n"
 	}
-	// module
+	// module content
 	out += fmt.Sprintf("\ntype %s struct {\n\t", m.gosym())
 	out += "*js.Object\n\t"
 	out += declSlice(m.Properties)
 	out += "\n\t"
 	out += declSlice(m.Methods)
 	out += "\n}\n"
-	// classes
-	if m.Classes != nil {
-		out += declSlice(m.Classes)
-		out += "\n\t"
-	}
-	// modules
-	if m.Modules != nil {
-		out += declSlice(m.Modules)
-	}
 	return out
 }
 
