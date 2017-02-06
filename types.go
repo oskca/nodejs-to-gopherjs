@@ -144,7 +144,7 @@ func (s *Signature) decl() string {
 		strings.Join(params, ","),
 	)
 	if s.Return != nil {
-		out += s.Return.decl()
+		out += "(" + s.Return.decl() + ")"
 	}
 	return out
 }
